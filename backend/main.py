@@ -15,6 +15,9 @@ from app.api import telephony
 from app.api import owner
 from app.api import calls
 from app.api import profiles
+from app.api import devices
+from app.api import notifications
+from app.api import call_tags
 from app.db.postgres import init_db
 
 
@@ -52,7 +55,10 @@ app.include_router(auth.router, tags=["auth"])
 app.include_router(telephony.router, tags=["telephony"])
 app.include_router(owner.router, tags=["owner"])
 app.include_router(calls.router, tags=["calls"])
+app.include_router(call_tags.router, tags=["call_tags"])
 app.include_router(profiles.router, tags=["profiles"])
+app.include_router(devices.router, tags=["devices"])
+app.include_router(notifications.router, tags=["notifications"])
 
 
 @app.get("/health")

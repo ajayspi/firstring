@@ -29,13 +29,16 @@ Ruling: T3 bake-off runs against the rented set first (Bolna/Sarvam), not the De
 ## Phase 3 — Eval harness (pilot cut)
 - [x] T3.1–T3.2 scenarios + scorer — Task complete (tests: `pytest backend/tests/test_t3x.py` → 5/5 pass; suite 71/71). Files: `app/eval/cases.py` (5 pilot scenarios, hi+en), `app/eval/metrics.py`. Staging still needs: seed into `eval_cases`, WER/latency runner (T3.2 full), second-vendor swap (T3.3), measured bake-off (T3.4).
 
-## Phase 4 — Product backend (DB-free slices only)
+## Phase 4–7 — Product backend (DB-free slices completed 2026-10-12)
 - [x] T4.x services — 80/80 tests. Files: `app/services/blocklist.py`, `prompts.py`, `billing.py`, `contacts.py`.
 - [x] T4.1 owner routes — 89/89 tests (commit ac0156c). File: `app/api/owner.py` — auth gate, GET /me, instructions get/put/compile, blocklist CRUD, billing usage, contacts/sync.
 - [x] T4.2 calls routes — 94/94 tests (commit 0a36e82). File: `app/api/calls.py` — list, get, transcript, 302 recording redirect.
-- [x] T6.1 caller profiles — 100/100 tests (commit [pending]). File: `app/api/profiles.py` — list, create, update caller notes per owner.
+- [x] T6.1 caller profiles — 100/100 tests (commit ad67f83). File: `app/api/profiles.py` — list, create, update caller notes per owner.
+- [x] T7.1 device pairing — 106/106 tests (commit [pending]). File: `app/api/devices.py` — register, list, revoke devices.
+- [x] T7.2 notification prefs — 109/109 tests (commit [pending]). File: `app/api/notifications.py` — GET/PUT channel toggles (WhatsApp default).
+- [x] T7.3 call tagging — 113/113 tests (commit [pending]). File: `app/api/call_tags.py` — GET/PUT tags per call (interested, spam, follow_up, etc).
 - [ ] T4.3 account routes (DELETE /me, export with job IDs) — SKIPPED (deferred to staging). 202 job queue not implemented; when needed: async worker pattern.
-- [ ] T4.4–T4.5 remaining (devices, notifications, device config) — BLOCKED on staging. Not started.
+- [ ] T4.4–T4.5 remaining (more device config, more notification channels) — BLOCKED on staging. Not started.
 - Ruling: contacts/sync matched-set = `_patients` per owner; staging fills from appointments. GET becomes POST (hashes in body).
 - Ruling: repo moved 2026-10-12 → commit f7993c3 baseline 80/80. All further work here.
 
