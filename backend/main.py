@@ -12,6 +12,7 @@ from app.api import voice
 from app.api import ops
 from app.api import auth
 from app.api import telephony
+from app.api import owner
 from app.db.postgres import init_db
 
 
@@ -47,6 +48,7 @@ app.include_router(voice.router, prefix="/api/voice", tags=["voice"])
 app.include_router(ops.router, tags=["ops"])
 app.include_router(auth.router, tags=["auth"])
 app.include_router(telephony.router, tags=["telephony"])
+app.include_router(owner.router, tags=["owner"])
 
 
 @app.get("/health")

@@ -1,35 +1,49 @@
 # firstring-temp — TEMP NAME, do not brand yet
 
-> All `.com`/`.ai` candidates checked 2026-10-12 are taken. This folder keeps
-> a temp name until the trademark + domain check passes. See plan docs for shortlist.
+> All `.com`/`.ai` candidates checked 2026-10-12 are taken; FirstRing is
+> rejected (3/3 domains + FirstRing India Pvt Ltd exists). Name TBD.
 
-## Ruling: reuse, don't re-scaffold
+## What this is
 
-`../MediCall-AI` already implements this project's stack (LiveKit Agents,
-FastAPI backend with `app/` + `tests/`, Next.js frontend, PG + pgvector).
-A parallel scaffold would be a duplicate codebase. So this folder holds
-only the **pilot thin slice**; the build base is MediCall-AI.
+An **SMB after-hours AI receptionist** for India: a clinic/salon forwards
+its calls here; we answer in Hindi or English, book into the real
+calendar, and WhatsApp the owner. Sold per booking. (Consumer Equal-AI
+competitor premise is dead — research: that category earns <$5k/month.)
 
-- Base: `../MediCall-AI/backend` (Python/FastAPI) + `../MediCall-AI/frontend`
-- Pilot scope: 3-clinic after-hours receptionist, per-booking pricing
-- Pipeline for pilot: keep MediCall-AI's LiveKit base; Bolna (MIT) stays
-  the fallback if vendor bills exceed the ₹5,000 pilot budget
+## Layout
 
-## Pilot go / no-go (measure before any §A–§D build-out)
+```
+backend/            FastAPI + LiveKit + PG/pgvector (copied from MediCall-AI 2026-10-12)
+  app/api/          ops, auth, telephony (signed webhooks), voice (legacy)
+  app/services/     auth, webhooks, call_state, forwarding, blocklist,
+                    prompts, billing, contacts
+  app/voice/        asr, llm, tts seams + turn controller + fallback ladder
+  app/eval/         pilot scenarios + scorer
+  app/workers/      retention windows
+  tests/            12 files, 80 tests
+progress.md         SDD ledger — every task line carries its test evidence
+```
+
+MediCall-AI is history: copied, not moved; its files stay as they were.
+
+## Run
+
+```powershell
+cd "C:\Users\vigilare\OneDrive - Vigilare BP PVT LTD\Documents\firstring-temp"
+python -m pytest backend/tests -q     # expect 80 passed
+```
+
+## Pilot go / no-go (measure before any further build-out)
 
 - GO: ≥60% of after-hours calls answered, ≥1 booking captured per clinic
   per week, ≥1 clinic agrees to paid per-booking terms
 - NO-GO: anything less — kill the pilot, keep the docs
 
-## Next commands (run from MediCall-AI, not here)
+## Open items (owner input needed)
 
-```powershell
-cd "C:\Users\vigilare\OneDrive - Vigilare BP PVT LTD\Documents\MediCall-AI"
-python -m pytest backend/tests -q
-```
-
-## Open items (need owner answers)
-
-1. Final name (Answered / FirstRing replacement) + `.in` + TM class 9/38/42
-2. Pilot vertical + city (suggest dental, Hyderabad)
-3. Language for any new service: match base (Python) unless a step says otherwise
+1. Final name + `.in`/TM class 9/38/42 check
+2. Pricing: per-booking ₹50 (recommended) vs ₹10/week (loses ~₹3,200/yr
+   per business at current cost structure — see chat)
+3. Staging: Postgres + vendor keys → unblocks migrations, HTTP routes,
+   first real call, vendor bake-off
+4. DLT sender (entity + header + OTP template) → unblocks real OTP SMS
