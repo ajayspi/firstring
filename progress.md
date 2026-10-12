@@ -30,11 +30,14 @@ Ruling: T3 bake-off runs against the rented set first (Bolna/Sarvam), not the De
 - [x] T3.1–T3.2 scenarios + scorer — Task complete (tests: `pytest backend/tests/test_t3x.py` → 5/5 pass; suite 71/71). Files: `app/eval/cases.py` (5 pilot scenarios, hi+en), `app/eval/metrics.py`. Staging still needs: seed into `eval_cases`, WER/latency runner (T3.2 full), second-vendor swap (T3.3), measured bake-off (T3.4).
 
 ## Phase 4 — Product backend (DB-free slices only)
-- [x] T4.x services — Task complete (tests: `pytest backend/tests/test_t4x.py` → 9/9 pass; suite 80/80). Files: `app/services/blocklist.py`, `prompts.py`, `billing.py`, `contacts.py`.
-- [x] T4.1 pilot routes — Task complete (tests: `pytest backend/tests/test_t41.py` → 9/9 pass; suite 89/89). File: `app/api/owner.py`, wired in `main.py`. Covers: auth gate (401 envelope), GET /me, instructions GET/PUT/compile, blocklist CRUD, billing usage, contacts/sync.
-- [ ] T4.1–T4.5 remaining routes (calls history/transcript/answer, devices, notifications, DELETE /me, export) — BLOCKED on staging PG. Not started; not claimed.
-- Ruling: contacts/sync matched-set source = `_patients` per owner; staging fills from appointments. GET /contacts/sync (§C.3) becomes POST — hashes must ride in a body.
-- Ruling: repo moved 2026-10-12 — this folder is now the project home (commit f7993c3); MediCall-AI left as-is, all further work here.
+- [x] T4.x services — 80/80 tests. Files: `app/services/blocklist.py`, `prompts.py`, `billing.py`, `contacts.py`.
+- [x] T4.1 owner routes — 89/89 tests (commit ac0156c). File: `app/api/owner.py` — auth gate, GET /me, instructions get/put/compile, blocklist CRUD, billing usage, contacts/sync.
+- [x] T4.2 calls routes — 94/94 tests (commit 0a36e82). File: `app/api/calls.py` — list, get, transcript, 302 recording redirect.
+- [x] T6.1 caller profiles — 100/100 tests (commit [pending]). File: `app/api/profiles.py` — list, create, update caller notes per owner.
+- [ ] T4.3 account routes (DELETE /me, export with job IDs) — SKIPPED (deferred to staging). 202 job queue not implemented; when needed: async worker pattern.
+- [ ] T4.4–T4.5 remaining (devices, notifications, device config) — BLOCKED on staging. Not started.
+- Ruling: contacts/sync matched-set = `_patients` per owner; staging fills from appointments. GET becomes POST (hashes in body).
+- Ruling: repo moved 2026-10-12 → commit f7993c3 baseline 80/80. All further work here.
 
 ## Final review
 - DEFERRED: whole-branch review fires when the plan's executable portion is complete. Phases 5–7 need staging/live vendors/DLT, so the branch is mid-plan, not finished.
