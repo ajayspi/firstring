@@ -229,12 +229,18 @@ firstring-temp/
   WEBSITE.md (new)
   DEPLOY.md (new)
   BUILD_SUMMARY.md (this file)
-  website.tsx (1200 lines, new)
-  page.tsx (next.js wrapper)
-  website-package.json
+  FINAL_SUMMARY.md (new)
+  package.json (new — next, framer-motion, lucide; port 3100)
+  tsconfig.json / next.config.mjs / postcss.config.js (new)
   tailwind.config.js
+  seed-demo-data.js (new)
+  app/            (layout, globals.css, page → /, admin/page → /admin)
+  components/
+    website.tsx (new, landing page)
+    admin-hud.tsx (new, high-tech console)
+    admin-dashboard.tsx (new, earlier console — not routed)
   backend/
-    main.py (updated, 8 router imports)
+    main.py (updated, 9 router imports)
     app/api/
       owner.py (new, 100 lines)
       calls.py (new, 80 lines)
@@ -263,7 +269,7 @@ firstring-temp/
 ```bash
 cd firstring-temp
 python -m pytest backend/tests -q
-# Expected: 113 passed
+# Expected: 126 passed
 ```
 
 **Website ready to deploy:**

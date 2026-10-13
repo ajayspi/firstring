@@ -201,13 +201,19 @@ firstring-temp/
   DEPLOY.md (updated)
   BUILD_SUMMARY.md (updated)
   INDEX.md (updated)
-  website.tsx (updated, 1200 lines)
-  page.tsx (updated)
-  website-package.json (updated)
+  FINAL_SUMMARY.md (new)
+  package.json (new — next, framer-motion, lucide; port 3100)
+  tsconfig.json / next.config.mjs / postcss.config.js (new)
   tailwind.config.js (updated)
-  admin-dashboard.tsx (new, 1500 lines)
-  admin-page.tsx (new)
   seed-demo-data.js (new)
+  app/
+    layout.tsx / globals.css (new)
+    page.tsx (landing route → /)
+    admin/page.tsx (console route → /admin)
+  components/
+    website.tsx (landing page)
+    admin-hud.tsx (new, high-tech console)
+    admin-dashboard.tsx (new, earlier console — not routed)
   backend/
     main.py (updated, 9 router imports)
     app/api/

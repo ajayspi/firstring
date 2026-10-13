@@ -6,3 +6,11 @@ __pycache__/
 *.sqlite
 *.db
 .venv/
+
+# Node / Next
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+.DS_Store

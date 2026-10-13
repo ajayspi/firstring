@@ -28,41 +28,50 @@
 ### 🌐 Frontend Code
 | File | What |
 |------|------|
-| [website.tsx](website.tsx) | Landing page (1200 lines, all-in-one) |
-| [page.tsx](page.tsx) | Next.js page wrapper |
-| [website-package.json](website-package.json) | Dependencies |
-| [tailwind.config.js](tailwind.config.js) | Color theme + typography |
+| `app/page.tsx` | Landing route → `/` |
+| `app/admin/page.tsx` | Operations console route → `/admin` |
+| [components/website.tsx](components/website.tsx) | Landing page (rich, interactive) |
+| [components/admin-hud.tsx](components/admin-hud.tsx) | High-tech ops console — live stream, canvas oscilloscope, radial gauges, hover charts, ⌘K palette, call drawer |
+| [components/admin-dashboard.tsx](components/admin-dashboard.tsx) | Earlier, calmer console (kept on disk, not routed) |
+| [package.json](package.json) | Dependencies + scripts (dev/build/start on **:3100**) |
+| [tailwind.config.js](tailwind.config.js) | Typography + theme |
 
-### ✅ Tests (113 green)
+### ✅ Tests (126 green)
 ```
 backend/tests/
-├── test_ops.py          (4)   ✅ health/ready/metrics
-├── test_t02.py          (9)   ✅ schema + models
-├── test_t03.py          (7)   ✅ auth + JWT
-├── test_t11.py          (5)   ✅ webhooks
-├── test_t12.py          (3)   ✅ call state
-├── test_t13.py          (3)   ✅ USSD forwarding
-├── test_t24.py          (8)   ✅ turn controller
-├── test_t25.py          (3)   ✅ ladder fallback
-├── test_t3x.py          (5)   ✅ eval harness
-├── test_t4x.py          (9)   ✅ services (blocklist, billing, etc)
-├── test_t41.py          (9)   ✅ owner routes
-├── test_t42.py          (5)   ✅ calls routes
-├── test_t61.py          (6)   ✅ caller profiles
-├── test_t71.py          (6)   ✅ device pairing
-├── test_t72.py          (3)   ✅ notification prefs
-├── test_t73.py          (4)   ✅ call tagging
-└── [legacy]            (20)   ✅ baseline (Phases 0–3)
+├── test_ops.py              (4)   ✅ health/ready/metrics
+├── test_g1_g2.py           (11)   ✅ Phase 0–1 foundation gates
+├── test_g3_state_machine.py (9)   ✅ call state machine
+├── test_t02.py              (9)   ✅ schema + models
+├── test_t03.py              (7)   ✅ auth + JWT
+├── test_t11.py              (5)   ✅ webhooks
+├── test_t12.py              (3)   ✅ call state
+├── test_t13.py              (3)   ✅ USSD forwarding
+├── test_t24.py              (8)   ✅ turn controller
+├── test_t25.py              (3)   ✅ ladder fallback
+├── test_t2x.py              (4)   ✅ voice seams
+├── test_t3x.py              (5)   ✅ eval harness
+├── test_t41.py              (9)   ✅ owner routes
+├── test_t42.py              (5)   ✅ calls routes
+├── test_t4x.py              (9)   ✅ services (blocklist, billing, etc)
+├── test_t61.py              (6)   ✅ caller profiles
+├── test_t71.py              (6)   ✅ device pairing
+├── test_t72.py              (3)   ✅ notification prefs
+├── test_t73.py              (4)   ✅ call tagging
+└── test_t81.py             (13)   ✅ admin dashboard API
 ```
 
 Run all: `python -m pytest backend/tests -q`
 
 ---
 
-## Commits (8 Total)
+## Commits (12 Total)
 
 ```
-d3d1a4b  docs: comprehensive build summary — 113 tests, website, staging roadmap
+8de0be6  feat(admin): admin dashboard API + 13 tests — 126/126 green
+d714700  feat(admin): ops console UI (overview/calls/clinics/analytics)
+e149cd5  docs: build summary + index
+d3d1a4b  docs: comprehensive build summary — website, staging roadmap
 8457845  docs: deployment guide — Vercel, custom domain, customization checklist
 981e6b1  design: production-grade landing page — Bolna-quality, India-first aesthetic
 d21534b  feat: devices, notifications, call tagging — 113/113 green
@@ -76,19 +85,22 @@ f7993c3  chore: pilot repo — Phases 0-4 (ops, schema, auth, webhooks, voice se
 
 ## What You Can Do Right Now
 
-### 1. Launch Website (5 min)
+### 1. Launch Website + Console (2 min)
 ```bash
 npm install
-npm run build
-vercel deploy --prod
+npm run dev            # http://localhost:3100
 ```
-Live at your Vercel domain. Share with prospects.
+- `/` — landing page
+- `/admin` — high-tech operations console
+
+Production build: `npm run build && npm start`, then `vercel deploy --prod`.
+The console polls the API at `NEXT_PUBLIC_API_BASE` (default `http://127.0.0.1:8000`)
+with `NEXT_PUBLIC_ADMIN_TOKEN`; with no API up it runs a labelled **simulation** feed.
 
 ### 2. Test Backend Locally
 ```bash
-cd backend
-python -m pytest tests -q
-# 113 passed ✅
+python -m pytest backend/tests -q
+# 126 passed ✅
 ```
 
 ### 3. Customize (10 min)
@@ -180,18 +192,32 @@ PUT /calls/{id}/tags
 
 ```
 firstring-temp/
-├── .git/                      (8 commits, green)
+├── .git/                      (12 commits, 126/126 green)
 ├── .gitignore
 ├── README.md
 ├── INDEX.md                   (this file)
 ├── BUILD_SUMMARY.md           (overview + roadmap)
 ├── DEPLOY.md                  (Vercel setup)
 ├── WEBSITE.md                 (design + customization)
+├── FINAL_SUMMARY.md           (project summary)
 ├── progress.md                (test ledger)
-├── website.tsx                (landing page, 1200 lines)
-├── page.tsx
-├── website-package.json
+├── package.json               (next + framer-motion + lucide, port 3100)
+├── tsconfig.json
+├── next.config.mjs
+├── postcss.config.js
 ├── tailwind.config.js
+├── seed-demo-data.js          (seed admin demo data via API)
+│
+├── app/
+│   ├── layout.tsx             (root layout + metadata)
+│   ├── globals.css            (fonts, scrollbars, reduced-motion)
+│   ├── page.tsx               (landing route → /)
+│   └── admin/page.tsx         (console route → /admin)
+│
+├── components/
+│   ├── website.tsx            (landing page)
+│   ├── admin-hud.tsx          (high-tech console)
+│   └── admin-dashboard.tsx    (earlier console, not routed)
 │
 └── backend/
     ├── main.py                (FastAPI + routers)

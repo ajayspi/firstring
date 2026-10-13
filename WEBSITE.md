@@ -36,7 +36,8 @@ vercel deploy --prod
 ```bash
 npm install
 npm run dev
-# Open http://localhost:3000
+# http://localhost:3100       → landing page
+# http://localhost:3100/admin → operations console
 ```
 
 ### Option 3: Docker
@@ -45,7 +46,7 @@ FROM node:20
 WORKDIR /app
 COPY . .
 RUN npm install && npm run build
-EXPOSE 3000
+EXPOSE 3100
 CMD ["npm", "start"]
 ```
 
@@ -159,10 +160,12 @@ These can be added later as separate features.
 
 ## Files
 
-- `website.tsx` — Main React component (1200 lines, all-in-one)
-- `page.tsx` — Next.js page wrapper
-- `website-package.json` — Dependencies
-- `tailwind.config.js` — Tailwind theme + colors
+- `components/website.tsx` — Main React component (landing page)
+- `app/page.tsx` — Landing route (`/`)
+- `app/admin/page.tsx` — Console route (`/admin`)
+- `components/admin-hud.tsx` — High-tech operations console
+- `package.json` — Dependencies + scripts (port 3100)
+- `tailwind.config.js` — Tailwind theme + fonts
 - `WEBSITE.md` — This file
 
 ## Next Steps

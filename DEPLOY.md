@@ -33,18 +33,16 @@ Your site is live at `https://firstring-<random>.vercel.app`
 ## Local Testing Before Deploy
 
 ```bash
-# Clone repo
-cd firstring-temp
-
+# from the repo root (firstring-temp/)
 # Install deps
-cp website-package.json package.json
 npm install
 
 # Run dev server
 npm run dev
 
-# Open http://localhost:3000
-# Edit website.tsx and save (hot reload)
+# Open http://localhost:3100       (landing page)
+#      http://localhost:3100/admin (operations console)
+# Edit components/website.tsx or components/admin-hud.tsx (hot reload)
 
 # Build for production
 npm run build
