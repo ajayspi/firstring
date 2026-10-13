@@ -18,6 +18,7 @@ from app.api import profiles
 from app.api import devices
 from app.api import notifications
 from app.api import call_tags
+from app.api import admin
 from app.db.postgres import init_db
 
 
@@ -59,6 +60,7 @@ app.include_router(call_tags.router, tags=["call_tags"])
 app.include_router(profiles.router, tags=["profiles"])
 app.include_router(devices.router, tags=["devices"])
 app.include_router(notifications.router, tags=["notifications"])
+app.include_router(admin.router, tags=["admin"])
 
 
 @app.get("/health")
