@@ -36,7 +36,7 @@
 | [package.json](package.json) | Dependencies + scripts (dev/build/start on **:3100**) |
 | [tailwind.config.js](tailwind.config.js) | Typography + theme |
 
-### ✅ Tests (126 green)
+### ✅ Tests (130 green)
 ```
 backend/tests/
 ├── test_ops.py              (4)   ✅ health/ready/metrics
@@ -58,17 +58,18 @@ backend/tests/
 ├── test_t71.py              (6)   ✅ device pairing
 ├── test_t72.py              (3)   ✅ notification prefs
 ├── test_t73.py              (4)   ✅ call tagging
-└── test_t81.py             (13)   ✅ admin dashboard API
+└── test_t81.py             (17)   ✅ admin dashboard API (+4 console contract)
 ```
 
 Run all: `python -m pytest backend/tests -q`
 
 ---
 
-## Commits (12 Total)
+## Commits (13 Total)
 
 ```
-8de0be6  feat(admin): admin dashboard API + 13 tests — 126/126 green
+d4694d9  feat(web): runnable Next.js app + high-tech ops console — 130/130 green
+8de0be6  feat(admin): admin dashboard API + 13 tests
 d714700  feat(admin): ops console UI (overview/calls/clinics/analytics)
 e149cd5  docs: build summary + index
 d3d1a4b  docs: comprehensive build summary — website, staging roadmap
@@ -94,13 +95,36 @@ npm run dev            # http://localhost:3100
 - `/admin` — high-tech operations console
 
 Production build: `npm run build && npm start`, then `vercel deploy --prod`.
-The console polls the API at `NEXT_PUBLIC_API_BASE` (default `http://127.0.0.1:8000`)
-with `NEXT_PUBLIC_ADMIN_TOKEN`; with no API up it runs a labelled **simulation** feed.
 
-### 2. Test Backend Locally
+The console polls `NEXT_PUBLIC_API_BASE` (default `http://127.0.0.1:8000`) with
+`NEXT_PUBLIC_ADMIN_TOKEN`. With no API reachable it falls back to a feed clearly
+labelled **Simulation** — a CORS refusal also lands there, so never read the
+simulated numbers as real.
+
+### 2. Run the Backend API
+```bash
+pip install -r backend/requirements.txt
+cd backend
+FRONTEND_URL=http://localhost:3100 python -m uvicorn main:app --port 8000
+```
+`FRONTEND_URL` **must** match the console's origin: `main.py` allows exactly one
+CORS origin and defaults it to `:3000`, while the console runs on **`:3100`**.
+Get it wrong and every fetch is blocked and the console silently shows
+Simulation.
+
+Populate the demo clinics/calls first (in-memory — restart clears them):
+```bash
+node seed-demo-data.js
+```
+
+> **Startup needs Postgres.** `main.py` connects on startup and exits if it
+> can't (this is the outstanding staging blocker). The 130 tests do **not**
+> prove the app boots — they mount routers on a bare `FastAPI()`.
+
+### 3. Test Backend
 ```bash
 python -m pytest backend/tests -q
-# 126 passed ✅
+# 130 passed ✅
 ```
 
 ### 3. Customize (10 min)
@@ -192,7 +216,7 @@ PUT /calls/{id}/tags
 
 ```
 firstring-temp/
-├── .git/                      (12 commits, 126/126 green)
+├── .git/                      (13 commits, 130/130 green)
 ├── .gitignore
 ├── README.md
 ├── INDEX.md                   (this file)

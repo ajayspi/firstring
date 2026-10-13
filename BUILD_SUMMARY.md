@@ -269,7 +269,7 @@ firstring-temp/
 ```bash
 cd firstring-temp
 python -m pytest backend/tests -q
-# Expected: 126 passed
+# Expected: 130 passed
 ```
 
 **Website ready to deploy:**

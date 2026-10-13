@@ -1,12 +1,12 @@
 # Firstring Final Summary — Complete Product
 
-**Status**: ✅ Backend 126/126 tests | ✅ Website | ✅ Admin Dashboard | ✅ Ready for staging + first clinic pilot
+**Status**: ✅ Backend 130/130 tests | ✅ Website | ✅ Ops Console | ⚠️ App boot needs Postgres | ✅ Ready for staging + first clinic pilot
 
 ---
 
 ## What You Have Built
 
-### Backend API (126 Tests, All Green)
+### Backend API (130 Tests, All Green)
 
 #### Phase 0: Foundations
 - ✅ `/healthz`, `/readyz`, `/metrics` (ops)
@@ -150,7 +150,7 @@ backend/tests/
   test_t81.py        (13 tests) ✅ admin dashboard
   + 2 legacy tests   (20 tests) ✅ baseline
 
-Total: 126/126 green, zero failures
+Total: 130/130 green, zero failures
 ```
 
 ---
@@ -240,7 +240,7 @@ firstring-temp/
 ```bash
 cd firstring-temp
 python -m pytest backend/tests -q
-# Expected: 126 passed
+# Expected: 130 passed
 ```
 
 **Website ready to deploy:**
@@ -320,11 +320,30 @@ npm run dev
 ## You've Built
 
 A **production-grade after-hours AI receptionist** for Indian SMBs:
-- 126 tests proving every route works
+- 130 tests pinning every route's behaviour
 - Enterprise-quality landing page ready to convert
+- High-tech ops console (live stream, oscilloscope, gauges, ⌘K palette)
 - Staging-ready backend with zero tech debt
 - Pricing model that works for clinics
 - Clear path to first 5 clinic pilots
-- Real-time ops dashboard for monitoring
 
 **Ship this 🚀**
+
+---
+
+## Verification notes (verified, not assumed)
+
+- `130 passed` from `python -m pytest backend/tests -q`; `npm run build` clean; both
+  routes serve **200** (`/` 33 KB, `/admin` 154 KB prerendered).
+- **The green suite does not prove the app boots.** Every test mounts its router on a
+  bare `FastAPI()` — `test_t81.py` never imports `main.py`. Booting for real was
+  broken by a missing `sqlalchemy`; installing it and setting `FRONTEND_URL` got
+  `main.py` to import (48 routes) and serve, then **startup exited on Postgres**
+  (asyncpg `ConnectionRefusedError`) — the known staging blocker. The console is
+  therefore verified against the API **contract** (4 pinned contract tests) plus a
+  real HTTP run, but not against a live database.
+- The console's live feed is **real** when `/admin/*` answers and a clearly
+  labelled **Simulation** otherwise. A CORS refusal lands in Simulation too — so the
+  simulated numbers must never be read as real.
+- `FRONTEND_URL` must equal the console origin (`http://localhost:3100`); it
+  defaults to `:3000` and `main.py` allows exactly one origin.

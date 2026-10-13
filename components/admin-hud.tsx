@@ -105,6 +105,8 @@ function useCounter(target: number, duration = 900) {
 }
 
 const fmtPhone = (p: string) => (p?.startsWith('+91') ? `+91 ${p.slice(3, 8)} ${p.slice(8)}` : p || '—');
+/* the admin API carries no clinic name — map the demo numbers, else show the phone */
+const nameOf = (phone: string) => CLINICS.find((c) => c.phone === phone)?.name || fmtPhone(phone);
 const fmtDur = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const fmtAgo = (t: number) => {
   const d = Math.floor((Date.now() - t) / 1000);
@@ -379,6 +381,7 @@ export default function AdminHUD() {
   const [query, setQuery] = useState('');
   const [clock, setClock] = useState(new Date());
   const [pulse, setPulse] = useState(0);
+  const [realClinics, setRealClinics] = useState<any[] | null>(null);
 
   /* boot sequence */
   useEffect(() => {
@@ -411,9 +414,46 @@ export default function AdminHUD() {
     return () => { alive = false; clearInterval(t); };
   }, []);
 
-  /* live call simulation — rotates the active call and appends to history */
+  /* real data when the API is up — simulation is the fallback, not the default */
   useEffect(() => {
-    if (!live) return;
+    if (!online) return;
+    let alive = true;
+    const load = async () => {
+      try {
+        const h = { Authorization: `Bearer ${ADMIN_TOKEN}` };
+        const [cr, gr] = await Promise.all([
+          fetch(`${API_BASE}/admin/calls?limit=200`, { headers: h, signal: AbortSignal.timeout(5000) }),
+          fetch(`${API_BASE}/admin/clinics`, { headers: h, signal: AbortSignal.timeout(5000) }),
+        ]);
+        if (!alive || !cr.ok || !gr.ok) return;
+        const cj = await cr.json();
+        const gj = await gr.json();
+        if (!alive) return;
+        const mapped: Call[] = (cj.items || []).map((r: any, i: number) => ({
+          id: r.id,
+          owner_phone: r.owner_phone,
+          caller_phone: r.caller_phone,
+          started_at: Date.parse(r.started_at) || Date.now() - i * 60000,
+          duration_sec: r.duration_sec ?? 0,
+          // ponytail: unknown outcomes collapse to 'message'; tighten if the
+          // backend ever emits a value outside OUTCOME_META
+          outcome: (OUTCOME_META[r.outcome as Outcome] ? r.outcome : 'message') as Outcome,
+          language: r.language || '—',
+        }));
+        if (mapped.length) setCalls(mapped);
+        setRealClinics(gj.items || []);
+      } catch {
+        /* keep whatever we already have on screen */
+      }
+    };
+    load();
+    const t = setInterval(load, 30000);
+    return () => { alive = false; clearInterval(t); };
+  }, [online]);
+
+  /* live call simulation — only when no API is linked */
+  useEffect(() => {
+    if (!live || online) return;
     const t = setInterval(() => {
       setPulse((p) => p + 1);
       setCalls((prev) => {
@@ -424,7 +464,7 @@ export default function AdminHUD() {
       setActiveCall(makeCall(true));
     }, 6500);
     return () => clearInterval(t);
-  }, [live, activeCall]);
+  }, [live, online, activeCall]);
 
   /* command palette hotkey */
   useEffect(() => {
@@ -477,6 +517,13 @@ export default function AdminHUD() {
   }, [calls, pulse]);
 
   const clinicRows = useMemo(() => {
+    if (realClinics) {
+      return realClinics.map((r: any) => ({
+        ...r,
+        name: nameOf(r.phone),
+        booking_rate: r.booking_rate ?? r.bookings / Math.max(r.calls, 1),
+      }));
+    }
     const map = new Map<string, Clinic>();
     CLINICS.forEach((c) => map.set(c.phone, { ...c }));
     calls.forEach((c) => {
@@ -489,7 +536,7 @@ export default function AdminHUD() {
     return [...map.values()]
       .map((r) => ({ ...r, booking_rate: r.bookings / Math.max(r.calls, 1) }))
       .sort((a, b) => b.calls - a.calls);
-  }, [calls, pulse]);
+  }, [calls, pulse, realClinics]);
 
   const visibleCalls = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -645,7 +692,7 @@ export default function AdminHUD() {
                   </div>
                   <div className="font-mono text-lg font-semibold text-white">{fmtPhone(activeCall.caller_phone)}</div>
                   <div className="flex items-center gap-3 text-[11px] text-slate-400">
-                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{CLINICS.find((c) => c.phone === activeCall.owner_phone)?.name}</span>
+                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{nameOf(activeCall.owner_phone)}</span>
                     <span className="flex items-center gap-1"><Languages className="h-3 w-3" />{activeCall.language}</span>
                   </div>
                 </motion.div>
@@ -730,7 +777,7 @@ export default function AdminHUD() {
                     </div>
                     <div className="mb-2 flex items-center gap-2 text-[10px] text-slate-500">
                       <Building2 className="h-3 w-3" />
-                      {CLINICS.find((x) => x.phone === c.owner_phone)?.name}
+                      {nameOf(c.owner_phone)}
                       <span className="ml-auto flex items-center gap-1"><Languages className="h-2.5 w-2.5" />{c.language}</span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -807,7 +854,7 @@ export default function AdminHUD() {
                         className="cursor-pointer border-t border-slate-800/50 transition hover:bg-cyan-500/[0.05]"
                       >
                         <td className="px-5 py-2.5 font-mono text-[11px] text-slate-400">{c.id}</td>
-                        <td className="px-3 py-2.5 text-slate-300">{CLINICS.find((x) => x.phone === c.owner_phone)?.name}</td>
+                        <td className="px-3 py-2.5 text-slate-300">{nameOf(c.owner_phone)}</td>
                         <td className="px-3 py-2.5 font-mono text-[11px] text-slate-400">{fmtPhone(c.caller_phone)}</td>
                         <td className="px-3 py-2.5 text-slate-500">{c.language}</td>
                         <td className="px-3 py-2.5 text-right font-mono tabular-nums text-slate-300">{fmtDur(c.duration_sec)}</td>
@@ -843,7 +890,7 @@ export default function AdminHUD() {
               </h2>
               <div className="space-y-3">
                 {[
-                  { name: 'Telephony', icon: Phone, status: 'operational' },
+                  { name: 'Telephony', icon: Phone, status: online ? 'operational' : 'degraded' },
                   { name: 'ASR vendor', icon: Mic, status: 'pending' },
                   { name: 'LLM vendor', icon: Cpu, status: 'pending' },
                   { name: 'TTS vendor', icon: Volume2, status: 'pending' },
@@ -1089,7 +1136,7 @@ function CallDrawer({ call, onClose }: { call: Call | null; onClose: () => void 
     if (!call) return [];
     if (call.outcome === 'booking') {
       return [
-        { role: 'ai', text: `Namaste! ${CLINICS.find((c) => c.phone === call.owner_phone)?.name}, main aapki kaise madad kar sakti hoon?` },
+        { role: 'ai', text: `Namaste! ${nameOf(call.owner_phone)}, main aapki kaise madad kar sakti hoon?` },
         { role: 'caller', text: 'Mujhe kal ke liye appointment chahiye.' },
         { role: 'ai', text: 'Ji bilkul. Kal subah 10 baje ya shaam 5 baje — kaunsa samay theek rahega?' },
         { role: 'caller', text: 'Shaam 5 baje.' },
@@ -1097,7 +1144,7 @@ function CallDrawer({ call, onClose }: { call: Call | null; onClose: () => void 
       ];
     }
     return [
-      { role: 'ai', text: `Namaste! ${CLINICS.find((c) => c.phone === call.owner_phone)?.name}.` },
+      { role: 'ai', text: `Namaste! ${nameOf(call.owner_phone)}.` },
       { role: 'caller', text: 'Kya aap kal khule hain?' },
       { role: 'ai', text: 'Ji haan, kal subah 9 se shaam 7 tak. Main aapka message doctor ko bhej doongi.' },
     ];
@@ -1137,7 +1184,7 @@ function CallDrawer({ call, onClose }: { call: Call | null; onClose: () => void 
                   { k: 'Duration', v: <span className="font-mono text-sm text-slate-200">{fmtDur(call.duration_sec)}</span> },
                   { k: 'Language', v: <span className="text-sm text-slate-200">{call.language}</span> },
                   { k: 'Started', v: <span className="font-mono text-xs text-slate-400">{fmtAgo(call.started_at)}</span> },
-                  { k: 'Clinic', v: <span className="text-sm text-slate-200">{CLINICS.find((c) => c.phone === call.owner_phone)?.name}</span> },
+                  { k: 'Clinic', v: <span className="text-sm text-slate-200">{nameOf(call.owner_phone)}</span> },
                   { k: 'Owner line', v: <span className="font-mono text-xs text-slate-400">{fmtPhone(call.owner_phone)}</span> },
                 ].map((row) => (
                   <div key={row.k} className="rounded-xl border border-slate-800 bg-slate-900/50 p-3">

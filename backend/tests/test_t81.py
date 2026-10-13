@@ -134,6 +134,43 @@ class TestAdminAnalytics(AdminCase):
         self.assertIn("by_day", body)
 
 
+class TestAdminConsoleContract(AdminCase):
+    """The ops console (components/admin-hud.tsx) reads these exact fields.
+
+    Pinned so a rename in the response can't silently blank the dashboard.
+    """
+
+    CONSOLE_CALL_FIELDS = {
+        "id", "owner_phone", "caller_phone", "started_at", "duration_sec", "outcome",
+    }
+    CONSOLE_CLINIC_FIELDS = {"phone", "plan", "calls", "bookings", "booking_rate"}
+    CONSOLE_OUTCOMES = {"booking", "message", "voicemail", "dropped"}
+
+    def test_calls_expose_console_fields(self):
+        r = self.client.get("/admin/calls", headers={"Authorization": ADMIN_TOKEN})
+        self.assertEqual(r.status_code, 200)
+        missing = self.CONSOLE_CALL_FIELDS - set(r.json()["items"][0])
+        self.assertEqual(missing, set(), f"console fields missing from call: {missing}")
+
+    def test_clinics_expose_console_fields(self):
+        r = self.client.get("/admin/clinics", headers={"Authorization": ADMIN_TOKEN})
+        self.assertEqual(r.status_code, 200)
+        missing = self.CONSOLE_CLINIC_FIELDS - set(r.json()["items"][0])
+        self.assertEqual(missing, set(), f"console fields missing from clinic: {missing}")
+
+    def test_started_at_is_parseable_by_the_console(self):
+        # the console does Date.parse(started_at) -> epoch ms
+        r = self.client.get("/admin/calls", headers={"Authorization": ADMIN_TOKEN})
+        raw = r.json()["items"][0]["started_at"]
+        self.assertIsInstance(raw, str)
+        datetime.fromisoformat(raw)
+
+    def test_outcomes_stay_in_the_console_vocabulary(self):
+        r = self.client.get("/admin/calls", headers={"Authorization": ADMIN_TOKEN})
+        for call in r.json()["items"]:
+            self.assertIn(call["outcome"], self.CONSOLE_OUTCOMES)
+
+
 if __name__ == "__main__":
     result = unittest.main(exit=False, verbosity=1)
     sys.exit(0 if result.result.wasSuccessful() else 1)
