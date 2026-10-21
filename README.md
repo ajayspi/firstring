@@ -3,6 +3,11 @@
 > All `.com`/`.ai` candidates checked 2026-10-12 are taken; FirstRing is
 > rejected (3/3 domains + FirstRing India Pvt Ltd exists). Name TBD.
 
+**Status: pilot scaffold. Nothing is deployed and no call has ever been placed.**
+All vendors, the database and telephony are wired as seams behind tests, not as
+working integrations. Read the [verification notes](FINAL_SUMMARY.md) before
+believing any number here.
+
 ## What this is
 
 An **SMB after-hours AI receptionist** for India: a clinic/salon forwards
@@ -14,13 +19,17 @@ competitor premise is dead — research: that category earns <$5k/month.)
 
 ```
 backend/            FastAPI + LiveKit + PG/pgvector (copied from MediCall-AI 2026-10-12)
-  app/api/          ops, auth, telephony (signed webhooks), voice (legacy)
+  app/api/          ops, auth, telephony (signed webhooks), voice, owner, calls,
+                    profiles, devices, notifications, call_tags, admin
   app/services/     auth, webhooks, call_state, forwarding, blocklist,
                     prompts, billing, contacts
   app/voice/        asr, llm, tts seams + turn controller + fallback ladder
   app/eval/         pilot scenarios + scorer
   app/workers/      retention windows
-  tests/            12 files, 80 tests
+  tests/            20 files, 130 tests
+  Dockerfile        container entrypoint (uvicorn main:app)
+app/                Next.js routes — / (landing) and /admin (ops console)
+components/         website.tsx, admin-hud.tsx (ops console)
 progress.md         SDD ledger — every task line carries its test evidence
 ```
 
@@ -30,8 +39,17 @@ MediCall-AI is history: copied, not moved; its files stay as they were.
 
 ```powershell
 cd "C:\Users\vigilare\OneDrive - Vigilare BP PVT LTD\Documents\firstring-temp"
-python -m pytest backend/tests -q     # expect 80 passed
+python -m pytest backend/tests -q      # expect 130 passed
+npm install && npm run dev             # :3100  →  /  and  /admin
 ```
+
+The green suite pins route behaviour; it mounts routers on a bare `FastAPI()`, so
+**it does not prove `main.py` boots**. Booting needs Postgres (`DATABASE_URL`).
+
+> **This repo is public.** The admin tokens in the source are throwaway demo
+> values and the API must never be hosted on them. Set real secrets in the
+> environment instead: `ADMIN_TOKEN`, `FOUNDER_TOKEN`, `DATABASE_URL`,
+> `FRONTEND_URL`.
 
 ## Pilot go / no-go (measure before any further build-out)
 
