@@ -99,7 +99,10 @@ function useCounter(target: number, duration = 900) {
       else from.current = target;
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    // rAF never fires when no frames are produced (backgrounded tab, headless
+    // capture); without this the tile silently reports 0 for real data.
+    const guard = setTimeout(() => setVal(target), duration + 100);
+    return () => { cancelAnimationFrame(raf); clearTimeout(guard); };
   }, [target, duration]);
   return val;
 }
