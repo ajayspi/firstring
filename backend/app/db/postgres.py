@@ -791,9 +791,22 @@ async def list_language_codes(active_only: bool = True) -> list[LanguageCode]:
 
 async def init_db() -> None:
     """Create all tables (dev/test). Prod uses postgres_schema.sql + Alembic."""
+    has_vector = True
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+    except Exception:
+        has_vector = False
+
+    # shortcut: hosts without pgvector (e.g. Windows, no MSVC toolchain) skip
+    # call_embeddings and lose vector search. Install pgvector to restore it.
+    if not has_vector:
+        print("pgvector unavailable — creating tables without call_embeddings")
+    skip = () if has_vector else ("call_embeddings",)
+    tables = [t for name, t in Base.metadata.tables.items() if name not in skip]
+
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        await conn.run_sync(lambda c: Base.metadata.create_all(c, tables=tables))
 
 
 # ─── Main ──────────────────────────────────────────────────────────────────

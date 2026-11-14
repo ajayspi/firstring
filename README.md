@@ -8,6 +8,10 @@ All vendors, the database and telephony are wired as seams behind tests, not as
 working integrations. Read the [verification notes](FINAL_SUMMARY.md) before
 believing any number here.
 
+Live status, decisions, traps and blockers are kept in the
+[project document](https://app.notion.com/p/FirstRing-AI-Receptionist-for-Indian-SMBs-Project-Master-Doc-418816247586813295f3c584231f2237)
+— it is updated more often than this file.
+
 ## What this is
 
 An **SMB after-hours AI receptionist** for India: a clinic/salon forwards

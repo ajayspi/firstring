@@ -32,17 +32,24 @@ class TestHealthz(unittest.TestCase):
 
 class TestReadyz(unittest.TestCase):
     def test_readyz_503_when_postgres_and_redis_down(self):
-        # This env runs no PG/Redis: real TCP probes must report down, not crash.
-        c = make_client()
-        r = c.get("/readyz")
-        self.assertEqual(r.status_code, 503)
-        body = r.json()
-        self.assertFalse(body["ready"])
-        self.assertIn("postgres", body["checks"])
-        self.assertIn("redis", body["checks"])
-        self.assertIn("vendor", body["checks"])
-        self.assertFalse(body["checks"]["postgres"]["ok"])
-        self.assertFalse(body["checks"]["redis"]["ok"])
+        # Force the probes down: asserting the live environment has no PG/Redis
+        # breaks the moment a real database is running on the dev machine.
+        ops.probe_postgres = lambda: {"ok": False, "detail": "down"}
+        ops.probe_redis = lambda: {"ok": False, "detail": "down"}
+        try:
+            c = make_client()
+            r = c.get("/readyz")
+            self.assertEqual(r.status_code, 503)
+            body = r.json()
+            self.assertFalse(body["ready"])
+            self.assertIn("postgres", body["checks"])
+            self.assertIn("redis", body["checks"])
+            self.assertIn("vendor", body["checks"])
+            self.assertFalse(body["checks"]["postgres"]["ok"])
+            self.assertFalse(body["checks"]["redis"]["ok"])
+        finally:
+            ops.probe_postgres = ops._tcp_probe_postgres
+            ops.probe_redis = ops._tcp_probe_redis
 
     def test_readyz_200_when_all_probes_healthy(self):
         ops.probe_postgres = lambda: {"ok": True, "detail": "tcp"}

@@ -373,24 +373,32 @@ export default function AdminHUD() {
   const [booted, setBooted] = useState(false);
   const [online, setOnline] = useState(false);
   const [live, setLive] = useState(true);
-  const [calls, setCalls] = useState<Call[]>(() => seedHistory());
-  const [activeCall, setActiveCall] = useState<Call>(() => makeCall(true));
+  // generate the demo feed on the CLIENT only: seedHistory() reads Date.now()
+  // and Math.random(), so prerendering it guarantees a hydration mismatch.
+  const [calls, setCalls] = useState<Call[]>([]);
+  const [activeCall, setActiveCall] = useState<Call | null>(null);
   const [detail, setDetail] = useState<Call | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | Outcome>('all');
   const [query, setQuery] = useState('');
-  const [clock, setClock] = useState(new Date());
+  const [clock, setClock] = useState<Date | null>(null);
   const [pulse, setPulse] = useState(0);
   const [realClinics, setRealClinics] = useState<any[] | null>(null);
 
-  /* boot sequence */
+  /* boot sequence + first client-only paint */
   useEffect(() => {
-    const t = setTimeout(() => setBooted(true), 620);
+    const t = setTimeout(() => {
+      setClock(new Date());
+      setCalls(seedHistory());
+      setActiveCall(makeCall(true));
+      setBooted(true);
+    }, 620);
     return () => clearTimeout(t);
   }, []);
 
   /* clock */
   useEffect(() => {
+    setClock(new Date());
     const t = setInterval(() => setClock(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
@@ -441,6 +449,7 @@ export default function AdminHUD() {
           language: r.language || '—',
         }));
         if (mapped.length) setCalls(mapped);
+        if (!activeCall && mapped.length) setActiveCall({ ...mapped[0], live: true });
         setRealClinics(gj.items || []);
       } catch {
         /* keep whatever we already have on screen */
@@ -449,11 +458,11 @@ export default function AdminHUD() {
     load();
     const t = setInterval(load, 30000);
     return () => { alive = false; clearInterval(t); };
-  }, [online]);
+  }, [online, activeCall]);
 
   /* live call simulation — only when no API is linked */
   useEffect(() => {
-    if (!live || online) return;
+    if (!live || online || !activeCall) return;
     const t = setInterval(() => {
       setPulse((p) => p + 1);
       setCalls((prev) => {
@@ -658,7 +667,7 @@ export default function AdminHUD() {
             </button>
 
             <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2 font-mono text-xs tabular-nums text-slate-300">
-              {clock.toLocaleTimeString('en-IN', { hour12: false })}
+              {clock ? clock.toLocaleTimeString('en-IN', { hour12: false }) : '--:--:--'}
               <span className="ml-2 text-slate-600">IST</span>
             </div>
           </div>
@@ -680,6 +689,7 @@ export default function AdminHUD() {
                   className="absolute inset-0 rounded-xl border border-cyan-400"
                 />
               </div>
+              {activeCall ? (
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeCall.id}
@@ -697,6 +707,9 @@ export default function AdminHUD() {
                   </div>
                 </motion.div>
               </AnimatePresence>
+              ) : (
+                <div className="font-mono text-sm text-slate-500">standing by…</div>
+              )}
             </div>
 
             {/* waveform */}
@@ -708,14 +721,14 @@ export default function AdminHUD() {
             <div className="flex items-center gap-3 md:flex-col md:items-end">
               <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
                 <Mic className="h-3.5 w-3.5 text-emerald-400" />
-                <span className="font-mono text-xs text-slate-300">{activeCall.turn}</span>
+                <span className="font-mono text-xs text-slate-300">{activeCall?.turn ?? '—'}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 {TURNS.map((t) => (
                   <span
                     key={t}
                     className={`h-1.5 w-1.5 rounded-full transition ${
-                      TURNS.indexOf(t) <= TURNS.indexOf(activeCall.turn || 'greeting')
+                      TURNS.indexOf(t) <= TURNS.indexOf(activeCall?.turn || 'greeting')
                         ? 'bg-cyan-400' : 'bg-slate-700'
                     }`}
                   />
